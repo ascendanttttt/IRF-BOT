@@ -169,7 +169,7 @@ async def permisos_error(ctx, error):
 
 @bot.event
 async def on_member_join(member):
-    channel = discord.utils.get(member.guild.text_channels, name="bienvenida")
+channel = member.guild.get_channel(1553140453216620746)
     if channel:
         mensaje = (
             f"¡Bienvenido/a {member.mention} a la **IRF │ International Roblox Federation │ S1**! ⚽🎉 "
