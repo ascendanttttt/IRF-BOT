@@ -1,6 +1,7 @@
 import asyncio
 import sys
 import random
+import os
 
 # Forzar el selector de red clásico en Windows para evitar errores de red
 if sys.platform == 'win32':
@@ -8,9 +9,27 @@ if sys.platform == 'win32':
 
 import discord
 from discord.ext import commands
+from flask import Flask
+from threading import Thread
 
+# --- MINI SERVIDOR WEB (Para mantener activo el puerto en Render) ---
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "¡El bot de la IRF está activo y online 24/7!"
+
+def run_web():
+    app.run(host='0.0.0.0', port=8080)
+
+def keep_alive():
+    t = Thread(target=run_web)
+    t.start()
+
+# --- CONFIGURACIÓN DEL BOT ---
 intents = discord.Intents.default()
 intents.message_content = True
+intents.members = True  # Obligatorio para detectar cuando entran miembros
 client = commands.Bot(command_prefix="!", intents=intents)
 
 @client.event
@@ -111,7 +130,6 @@ async def warn(ctx, member: discord.Member, *, razon: str = "No especificada"):
     except Exception:
         pass
 
-    # Buscamos los roles de Warn del 1 al 5 en el servidor
     roles_warn = {
         1: discord.utils.get(ctx.guild.roles, name="Warn 1"),
         2: discord.utils.get(ctx.guild.roles, name="Warn 2"),
@@ -120,12 +138,10 @@ async def warn(ctx, member: discord.Member, *, razon: str = "No especificada"):
         5: discord.utils.get(ctx.guild.roles, name="Warn 5"),
     }
 
-    # Verificamos que los roles existan creados en el servidor
     if not all(roles_warn.values()):
         await ctx.send("❌ Faltan roles por crear. Asegúrate de tener exactamente los roles: `Warn 1`, `Warn 2`, `Warn 3`, `Warn 4` y `Warn 5`.", delete_after=7)
         return
 
-    # Determinamos qué warn actual tiene el usuario para subirlo al siguiente nivel
     nivel_actual = 0
     for nivel, rol in roles_warn.items():
         if rol in member.roles:
@@ -139,11 +155,9 @@ async def warn(ctx, member: discord.Member, *, razon: str = "No especificada"):
         return
 
     try:
-        # Si tenía un warn anterior, se lo sacamos
         if nivel_actual > 0:
             await member.remove_roles(roles_warn[nivel_actual])
         
-        # Le asignamos el nuevo rol de warn
         await member.add_roles(roles_warn[nuevo_nivel])
         
         await ctx.send(f"⚠️ **{member.mention}** ha recibido una advertencia (**Warn {nuevo_nivel}/5**). Razón: *{razon}*", delete_after=6)
@@ -165,21 +179,29 @@ async def permisos_error(ctx, error):
         await ctx.send("❌ No tienes los permisos necesarios para usar este comando.", delete_after=5)
     elif isinstance(error, commands.MissingRequiredArgument):
         await ctx.send("❌ Faltan datos (ejemplo de uso: `!warn @usuario [razón]`).", delete_after=5)
-# Arrancar el bot
 
-@bot.event
+
+# --- EVENTO DE BIENVENIDA ---
+
+@client.event
 async def on_member_join(member):
-channel = member.guild.get_channel(1553140453216620746)
+    if member.bot:
+        return
+        
+    channel = member.guild.get_channel(1553140453216620746)
     if channel:
         mensaje = (
             f"¡Bienvenido/a {member.mention} a la **IRF │ International Roblox Federation │ S1**! ⚽🎉 "
             f"Qué bueno tenerte por acá. ¡Pasala bien y busca un equipo!"
         )
         
-        # Logo de la liga por enlace directo que ya subiste
         logo_url = "https://media.discordapp.net/attachments/1553427240556040202/1553872946395746325/IRF.png"
         
-        # Envía el mensaje de texto junto con el enlace de la imagen para que Discord muestre la miniatura
         await channel.send(f"{mensaje}\n{logo_url}")
 
-bot.run(os.getenv("DISCORD_TOKEN"))
+
+# --- ARRANCAR SERVIDOR WEB Y BOT ---
+
+if __name__ == "__main__":
+    keep_alive()
+    client.run(os.getenv("DISCORD_TOKEN"))
