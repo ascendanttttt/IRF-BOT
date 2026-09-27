@@ -191,8 +191,8 @@ async def on_member_join(member):
     channel = member.guild.get_channel(1553140453216620746)
     if channel:
         mensaje = (
-            f"¡Bienvenido/a {member.mention} a la **IRF │ International Roblox Federation │ S1**! ⚽🎉 "
-            f"Qué bueno tenerte por acá. ¡Pasala bien y busca un equipo!"
+            f"¡Bienvenido/a {member.mention} a la **IRF │ International Roblox Federation │ S1**! "
+            f"Qué bueno tenerte por acá. ¡Pasala bien y busca un equipo!, recuerda leer las reglas, ser activo, y colaborar con el equipo administrativo."
         )
         
         logo_url = "https://media.discordapp.net/attachments/1553427240556040202/1553872946395746325/IRF.png"
