@@ -165,6 +165,21 @@ async def permisos_error(ctx, error):
         await ctx.send("❌ No tienes los permisos necesarios para usar este comando.", delete_after=5)
     elif isinstance(error, commands.MissingRequiredArgument):
         await ctx.send("❌ Faltan datos (ejemplo de uso: `!warn @usuario [razón]`).", delete_after=5)
+# Arrancar el bot
 
-import os
-client.run(os.getenv("DISCORD_TOKEN"))
+@bot.event
+async def on_member_join(member):
+    channel = discord.utils.get(member.guild.text_channels, name="bienvenida")
+    if channel:
+        mensaje = (
+            f"¡Bienvenido/a {member.mention} a la **IRF │ International Roblox Federation │ S1**! ⚽🎉 "
+            f"Qué bueno tenerte por acá. ¡Pasala bien y busca un equipo!"
+        )
+        
+        # Logo de la liga por enlace directo que ya subiste
+        logo_url = "https://media.discordapp.net/attachments/1553427240556040202/1553872946395746325/IRF.png"
+        
+        # Envía el mensaje de texto junto con el enlace de la imagen para que Discord muestre la miniatura
+        await channel.send(f"{mensaje}\n{logo_url}")
+
+bot.run(os.getenv("DISCORD_TOKEN"))
